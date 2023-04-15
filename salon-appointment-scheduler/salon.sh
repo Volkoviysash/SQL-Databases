@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 
 PSQL="psql -X --username=freecodecamp --dbname=salon --tuples-only -c"
 
@@ -23,14 +23,15 @@ SERVICE_MENU() {
   fi
 
   echo -e "\nHere are services available"
-  echo "$SERVICE_LIST" | while read SERVICE_ID BAR SERVICE
+  while read SERVICE_ID BAR SERVICE
   do
     echo "$SERVICE_ID) $SERVICE"
-  done
+  done <<< "$SERVICE_LIST"
+
   read SERVICE_ID_SELECTED
 
   if [[ ! $SERVICE_ID_SELECTED =~ ^[0-9]+$ ]]
-    then
+  then
     MAIN_MENU "That is not a number"
   else
     SERVICE_AVAILABLE=$($PSQL "SELECT service_id FROM services WHERE service_id = $SERVICE_ID_SELECTED")
@@ -55,15 +56,28 @@ SERVICE_BOOKING() {
   if [[ -z $CUSTOMER_NAME ]]
   then
     # get new customer name
-    echo -e "\nWhat's your name?"
+      echo -e "\nWhat's your name?"
     read CUSTOMER_NAME
     
     # insert new customer
     INSERT_CUSTOMER_RESULT=$($PSQL "INSERT INTO customers(name, phone) VALUES('$CUSTOMER_NAME', '$CUSTOMER_PHONE')")
   fi
-  
+
   echo -e "\nWhat time to sign up you for, $CUSTOMER_NAME?"
   read SERVICE_TIME
+
+  CUSTOMER_ID=$($PSQL "SELECT customer_id FROM customers WHERE name = '$CUSTOMER_NAME'")
+
+  # insert time
+  if [[ $SERVICE_TIME ]]
+  then
+    INSERT_SERVICE_TIME=$($PSQL "INSERT INTO appointments(service_id, customer_id, time) VALUES('$SERVICE_ID_SELECTED', '$CUSTOMER_ID', '$SERVICE_TIME')")
+    if [[ $INSERT_SERVICE_TIME ]]
+    then
+      SERVICE=$($PSQL "SELECT name from services WHERE service_id=$SERVICE_ID_SELECTED")
+      echo -e "\nI have put you down for a $SERVICE at $SERVICE_TIME, $CUSTOMER_NAME."
+    fi
+  fi
 }
 
 MAIN_MENU
