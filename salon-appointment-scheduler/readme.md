@@ -1,3 +1,3 @@
 # Salon appointment scheduler
 
-This project is in progres
+This project is in progress
