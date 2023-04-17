@@ -1,97 +1,239 @@
-#!/bin/bash
+--
+-- PostgreSQL database dump
+--
 
-PSQL="psql -X --username=freecodecamp --dbname=periodic_table --tuples-only -c"
+-- Dumped from database version 12.9 (Ubuntu 12.9-2.pgdg20.04+1)
+-- Dumped by pg_dump version 12.9 (Ubuntu 12.9-2.pgdg20.04+1)
 
-MAIN_MENU(){
-  if [[ "$1" =~ ^[0-9]+$ ]]
-    then
-    GET_INFO_BY_ATOMIC_NUMBER $1
-  elif [[ "$1" =~ ^[a-zA-Z]{1,2}$ ]]
-    then
-    GET_INFO_BY_SYMBOL $1
-  elif [[ "$1" =~ ^[a-zA-Z]+$ ]]
-    then
-    GET_INFO_BY_NAME $1
-  else
-    echo "Error! Use ./element.sh 123 or ./element.sh H or ./element.sh Helium "
-  fi
-}
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
 
-GET_INFO_BY_ATOMIC_NUMBER(){
-  ATOMIC_NUMBER=$1
-  ELEMENT_EXISTS=$($PSQL "SELECT EXISTS(SELECT 1 FROM elements WHERE atomic_number = $ATOMIC_NUMBER)")
+DROP DATABASE periodic_table;
+--
+-- Name: periodic_table; Type: DATABASE; Schema: -; Owner: postgres
+--
 
-  if [ $ELEMENT_EXISTS = "f" ]
-  then
-    echo "I could not find that element in the database."
-    return
-  fi
+CREATE DATABASE periodic_table WITH TEMPLATE = template0 ENCODING = 'UTF8' LC_COLLATE = 'C.UTF-8' LC_CTYPE = 'C.UTF-8';
 
-  SYMBOL=$($PSQL "SELECT symbol FROM elements WHERE atomic_number = $ATOMIC_NUMBER")
-  NAME=$($PSQL "SELECT name FROM elements WHERE atomic_number = $ATOMIC_NUMBER")
-  TYPE=$($PSQL "SELECT types.type FROM properties JOIN types ON properties.type_id = types.type_id WHERE properties.atomic_number = $ATOMIC_NUMBER;")
-  ATOMIC_MASS=$($PSQL "SELECT atomic_mass FROM properties WHERE atomic_number = $ATOMIC_NUMBER")
-  MELTING_POINT=$($PSQL "SELECT melting_point_celsius FROM properties WHERE atomic_number = $ATOMIC_NUMBER")
-  BOILING_POINT_CELSIUS=$($PSQL "SELECT boiling_point_celsius FROM properties WHERE atomic_number = $ATOMIC_NUMBER")
 
-  PRINT_INFO $ATOMIC_NUMBER $NAME $SYMBOL $TYPE $ATOMIC_MASS $MELTING_POINT $BOILING_POINT_CELSIUS
-}
+ALTER DATABASE periodic_table OWNER TO postgres;
 
-GET_INFO_BY_SYMBOL(){
-  SYMBOL=$1
-  ELEMENT_EXISTS=$($PSQL "SELECT EXISTS(SELECT 1 FROM elements WHERE symbol = '$SYMBOL')")
+\connect periodic_table
 
-  if [ $ELEMENT_EXISTS = "f" ]
-  then
-    echo "I could not find that element in the database."
-    return
-  fi
-  
-  ATOMIC_NUMBER=$($PSQL "SELECT atomic_number FROM elements WHERE symbol = '$SYMBOL'")
-  NAME=$($PSQL "SELECT name FROM elements WHERE symbol = '$SYMBOL'")
-  TYPE=$($PSQL "SELECT types.type FROM properties JOIN types ON properties.type_id = types.type_id WHERE properties.atomic_number = $ATOMIC_NUMBER;")
-  ATOMIC_MASS=$($PSQL "SELECT atomic_mass FROM properties WHERE atomic_number = $ATOMIC_NUMBER")
-  MELTING_POINT=$($PSQL "SELECT melting_point_celsius FROM properties WHERE atomic_number = $ATOMIC_NUMBER")
-  BOILING_POINT_CELSIUS=$($PSQL "SELECT boiling_point_celsius FROM properties WHERE atomic_number = $ATOMIC_NUMBER")
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
 
-  PRINT_INFO $ATOMIC_NUMBER $NAME $SYMBOL $TYPE $ATOMIC_MASS $MELTING_POINT $BOILING_POINT_CELSIUS
-}
+SET default_tablespace = '';
 
-GET_INFO_BY_NAME(){
-  NAME=$1
-  ELEMENT_EXISTS=$($PSQL "SELECT EXISTS(SELECT 1 FROM elements WHERE name = '$NAME')")
+SET default_table_access_method = heap;
 
-  if [ $ELEMENT_EXISTS = "f" ]
-  then
-    echo "I could not find that element in the database."
-    return
-  fi
-  
-  ATOMIC_NUMBER=$($PSQL "SELECT atomic_number FROM elements WHERE name = '$NAME'")
-  SYMBOL=$($PSQL "SELECT symbol FROM elements WHERE atomic_number = $ATOMIC_NUMBER")
-  TYPE=$($PSQL "SELECT types.type FROM properties JOIN types ON properties.type_id = types.type_id WHERE properties.atomic_number = $ATOMIC_NUMBER;")
-  ATOMIC_MASS=$($PSQL "SELECT atomic_mass FROM properties WHERE atomic_number = $ATOMIC_NUMBER")
-  MELTING_POINT=$($PSQL "SELECT melting_point_celsius FROM properties WHERE atomic_number = $ATOMIC_NUMBER")
-  BOILING_POINT_CELSIUS=$($PSQL "SELECT boiling_point_celsius FROM properties WHERE atomic_number = $ATOMIC_NUMBER")
+--
+-- Name: elements; Type: TABLE; Schema: public; Owner: freecodecamp
+--
 
-  PRINT_INFO $ATOMIC_NUMBER $NAME $SYMBOL $TYPE $ATOMIC_MASS $MELTING_POINT $BOILING_POINT_CELSIUS
-}
+CREATE TABLE public.elements (
+    atomic_number integer NOT NULL,
+    symbol character varying(2) NOT NULL,
+    name character varying(40) NOT NULL
+);
 
-PRINT_INFO() {
-  ATOMIC_NUMBER=$(echo $1 | tr -d '[:space:]')
-  NAME=$(echo $2 | tr -d '[:space:]')
-  SYMBOL=$(echo $3 | tr -d '[:space:]')
-  TYPE=$(echo $4 | tr -d '[:space:]')
-  ATOMIC_MASS=$(echo $5 | tr -d '[:space:]')
-  MELTING_POINT=$(echo $6 | tr -d '[:space:]')
-  BOILING_POINT_CELSIUS=$(echo $7 | tr -d '[:space:]')
 
-  echo "The element with atomic number $ATOMIC_NUMBER is $NAME ($SYMBOL). It's a $TYPE, with a mass of $ATOMIC_MASS amu. $NAME has a melting point of $MELTING_POINT celsius and a boiling point of $BOILING_POINT_CELSIUS celsius."
-}
+ALTER TABLE public.elements OWNER TO freecodecamp;
 
-if [ $# -eq 0 ]
-  then
-  echo "Please provide an element as an argument."
-else
-  MAIN_MENU $1
-fi
+--
+-- Name: properties; Type: TABLE; Schema: public; Owner: freecodecamp
+--
+
+CREATE TABLE public.properties (
+    atomic_number integer NOT NULL,
+    type character varying(30),
+    atomic_mass numeric NOT NULL,
+    melting_point_celsius numeric NOT NULL,
+    boiling_point_celsius numeric NOT NULL,
+    type_id integer DEFAULT 999 NOT NULL
+);
+
+
+ALTER TABLE public.properties OWNER TO freecodecamp;
+
+--
+-- Name: types; Type: TABLE; Schema: public; Owner: freecodecamp
+--
+
+CREATE TABLE public.types (
+    type_id integer NOT NULL,
+    type character varying(60) NOT NULL
+);
+
+
+ALTER TABLE public.types OWNER TO freecodecamp;
+
+--
+-- Name: types_type_id_seq; Type: SEQUENCE; Schema: public; Owner: freecodecamp
+--
+
+CREATE SEQUENCE public.types_type_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.types_type_id_seq OWNER TO freecodecamp;
+
+--
+-- Name: types_type_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: freecodecamp
+--
+
+ALTER SEQUENCE public.types_type_id_seq OWNED BY public.types.type_id;
+
+
+--
+-- Name: types type_id; Type: DEFAULT; Schema: public; Owner: freecodecamp
+--
+
+ALTER TABLE ONLY public.types ALTER COLUMN type_id SET DEFAULT nextval('public.types_type_id_seq'::regclass);
+
+
+--
+-- Data for Name: elements; Type: TABLE DATA; Schema: public; Owner: freecodecamp
+--
+
+INSERT INTO public.elements VALUES (1, 'H', 'Hydrogen');
+INSERT INTO public.elements VALUES (2, 'He', 'Helium');
+INSERT INTO public.elements VALUES (3, 'Li', 'Lithium');
+INSERT INTO public.elements VALUES (4, 'Be', 'Beryllium');
+INSERT INTO public.elements VALUES (5, 'B', 'Boron');
+INSERT INTO public.elements VALUES (6, 'C', 'Carbon');
+INSERT INTO public.elements VALUES (7, 'N', 'Nitrogen');
+INSERT INTO public.elements VALUES (8, 'O', 'Oxygen');
+INSERT INTO public.elements VALUES (9, 'F', 'Fluorine');
+INSERT INTO public.elements VALUES (10, 'Ne', 'Neon');
+
+
+--
+-- Data for Name: properties; Type: TABLE DATA; Schema: public; Owner: freecodecamp
+--
+
+INSERT INTO public.properties VALUES (2, 'nonmetal', 4.0026, -272.2, -269, 1);
+INSERT INTO public.properties VALUES (6, 'nonmetal', 12.011, 3550, 4027, 1);
+INSERT INTO public.properties VALUES (5, 'metalloid', 10.81, 2075, 4000, 3);
+INSERT INTO public.properties VALUES (4, 'metal', 9.0122, 1287, 2470, 2);
+INSERT INTO public.properties VALUES (3, 'metal', 6.94, 180.54, 1342, 2);
+INSERT INTO public.properties VALUES (8, 'nonmetal', 15.999, -218, -183, 1);
+INSERT INTO public.properties VALUES (7, 'nonmetal', 14.007, -210.1, -195.8, 1);
+INSERT INTO public.properties VALUES (1, 'nonmetal', 1.008, -259.1, -252.9, 1);
+INSERT INTO public.properties VALUES (9, 'nonmetal', 18.998, -220, -188.1, 1);
+INSERT INTO public.properties VALUES (10, 'nonmetal', 20.18, -248.6, -246.1, 1);
+
+
+--
+-- Data for Name: types; Type: TABLE DATA; Schema: public; Owner: freecodecamp
+--
+
+INSERT INTO public.types VALUES (1, 'nonmetal');
+INSERT INTO public.types VALUES (2, 'metal');
+INSERT INTO public.types VALUES (3, 'metalloid');
+
+
+--
+-- Name: types_type_id_seq; Type: SEQUENCE SET; Schema: public; Owner: freecodecamp
+--
+
+SELECT pg_catalog.setval('public.types_type_id_seq', 3, true);
+
+
+--
+-- Name: elements elements_atomic_number_key; Type: CONSTRAINT; Schema: public; Owner: freecodecamp
+--
+
+ALTER TABLE ONLY public.elements
+    ADD CONSTRAINT elements_atomic_number_key UNIQUE (atomic_number);
+
+
+--
+-- Name: elements elements_name_unique; Type: CONSTRAINT; Schema: public; Owner: freecodecamp
+--
+
+ALTER TABLE ONLY public.elements
+    ADD CONSTRAINT elements_name_unique UNIQUE (name);
+
+
+--
+-- Name: elements elements_pkey; Type: CONSTRAINT; Schema: public; Owner: freecodecamp
+--
+
+ALTER TABLE ONLY public.elements
+    ADD CONSTRAINT elements_pkey PRIMARY KEY (atomic_number);
+
+
+--
+-- Name: elements elements_symbol_unique; Type: CONSTRAINT; Schema: public; Owner: freecodecamp
+--
+
+ALTER TABLE ONLY public.elements
+    ADD CONSTRAINT elements_symbol_unique UNIQUE (symbol);
+
+
+--
+-- Name: properties properties_atomic_number_key; Type: CONSTRAINT; Schema: public; Owner: freecodecamp
+--
+
+ALTER TABLE ONLY public.properties
+    ADD CONSTRAINT properties_atomic_number_key UNIQUE (atomic_number);
+
+
+--
+-- Name: properties properties_pkey; Type: CONSTRAINT; Schema: public; Owner: freecodecamp
+--
+
+ALTER TABLE ONLY public.properties
+    ADD CONSTRAINT properties_pkey PRIMARY KEY (atomic_number);
+
+
+--
+-- Name: types types_pkey; Type: CONSTRAINT; Schema: public; Owner: freecodecamp
+--
+
+ALTER TABLE ONLY public.types
+    ADD CONSTRAINT types_pkey PRIMARY KEY (type_id);
+
+
+--
+-- Name: properties fk_properties_elements; Type: FK CONSTRAINT; Schema: public; Owner: freecodecamp
+--
+
+ALTER TABLE ONLY public.properties
+    ADD CONSTRAINT fk_properties_elements FOREIGN KEY (atomic_number) REFERENCES public.elements(atomic_number);
+
+
+--
+-- Name: properties fk_properties_types; Type: FK CONSTRAINT; Schema: public; Owner: freecodecamp
+--
+
+ALTER TABLE ONLY public.properties
+    ADD CONSTRAINT fk_properties_types FOREIGN KEY (type_id) REFERENCES public.types(type_id);
+
+
+--
+-- PostgreSQL database dump complete
+--
+
